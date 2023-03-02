@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+/*import 'package:flutter/material.dart';
 
 void main() {
   runApp(const MyApp());
@@ -110,6 +110,78 @@ class _MyHomePageState extends State<MyHomePage> {
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+}*/
+import 'dart:async';
+import 'dart:math';
+import 'package:flutter/material.dart';
+import 'package:sensors/sensors.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatefulWidget {
+  @override
+  _MyAppState createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late StreamSubscription<AccelerometerEvent> _streamSubscription;
+  final double _shakeThreshold = 17.0;
+  final String _phoneNumber = '1234567890'; // Replace with your phone number
+
+  @override
+  void initState() {
+    super.initState();
+    _streamSubscription = accelerometerEvents.listen((AccelerometerEvent event) {
+      if (event != null) {
+        double x = event.x;
+        double y = event.y;
+        double z = event.z;
+
+        double acceleration = _calculateAcceleration(x, y, z);
+
+        if (acceleration > _shakeThreshold) {
+          _makePhoneCall();
+        }
+      }
+    });
+  }
+
+  double _calculateAcceleration(double x, double y, double z) {
+    double acceleration = sqrt(x * x + y * y + z * z);
+    return acceleration;
+  }
+
+  Future<void> _makePhoneCall() async {
+    final url = 'tel:$_phoneNumber';
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _streamSubscription.cancel();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('Shake to Call'),
+        ),
+        body: Center(
+          child: Text('Shake your phone to make a call.'),
+        ),
+      ),
     );
   }
 }
