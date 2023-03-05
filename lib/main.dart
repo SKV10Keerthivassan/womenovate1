@@ -1,137 +1,57 @@
-/*import 'package:flutter/material.dart';
 
-void main() {
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
-
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({Key? key, required this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
-  }
-}*/
+import 'package:flutter/material.dart';
+import 'package:flutter_sound/flutter_sound.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import 'dart:async';
 import 'dart:math';
-import 'package:flutter/material.dart';
 import 'package:sensors/sensors.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_sms/flutter_sms.dart';
+
+
 
 void main() {
   runApp(MyApp());
 }
 
-class MyApp extends StatefulWidget {
+class MyApp extends StatelessWidget {
   @override
-  _MyAppState createState() => _MyAppState();
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'My App',
+      home: MyHomePage(),
+    );
+  }
 }
 
-class _MyAppState extends State<MyApp> {
+class MyHomePage extends StatefulWidget {
+  @override
+  _MyHomePageState createState() => _MyHomePageState();
+}
+
+/*//not//class _MyHomePageState extends State<MyHomePage> {
+  FlutterSoundRecorder audioPlayer = FlutterSoundRecorder();
+  FlutterSoundPlayer audioPlayback = FlutterSoundPlayer();
+  late String audioFilePath;
+  bool isRecording = false;
+ 
+  final String _password = 'womensafe'; // Define the password here
   late StreamSubscription<AccelerometerEvent> _streamSubscription;
   final double _shakeThreshold = 17.0;
-  final String _phoneNumber = '1234567890'; // Replace with your phone number
+  final String _phoneNumber = '7094864687'; // Replace with your phone number
+
+  String currentStep = '';
+
+  void selectStep(String step) {
+    setState(() {
+      currentStep = step;
+      Navigator.pop(context);
+    });
+  }
 
   @override
   void initState() {
@@ -149,9 +69,262 @@ class _MyAppState extends State<MyApp> {
         }
       }
     });
+    _askPermissions();
   }
 
+  _askPermissions() async {
+    var statuses = await [
+      Permission.microphone,
+      Permission.phone,
+      Permission.storage,
+    ].request();
+    print(statuses);
+  }
+
+
+Future<LocationData?> getCurrentLocation() async {
+  final Location location = Location();
+  bool _serviceEnabled;
+  LocationData? _locationData;
+  // Get the current location
+  _locationData = await location.getLocation();
+  return _locationData;
+}
   double _calculateAcceleration(double x, double y, double z) {
+    double acceleration = sqrt(x * x + y * y + z * z);
+    return acceleration;
+  }
+
+
+
+  Future<void> _makePhoneCall() async {
+    final url = 'tel:$_phoneNumber';
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
+  }
+
+
+
+
+  void startRecording() async {
+    final directory = await getExternalStorageDirectory();
+    final filePath = '${directory!.path}/Recordings/Voice Recorder/audio_recording.mp3';
+
+    await audioPlayer.startRecorder(
+      toFile: filePath,
+      codec: Codec.mp3,
+    );
+
+    setState(() {
+      audioFilePath = filePath;
+      isRecording = true;
+    });
+  }
+
+  void _sendPanicSMS() async {
+    final LocationData? locationData = await getCurrentLocation();
+    if (locationData == null) {
+      return;
+    }
+
+    final String message =
+        'I am in danger. My current location is: ${locationData.latitude}, ${locationData.longitude}.';
+    final List<String> recipients = ['+7094864687']; // Replace with the recipient phone number
+    String _result = await sendSMS(message: message, recipients: recipients)
+        .catchError((onError) {
+      print(onError);
+    });
+    print(_result);
+  }
+
+  void stopRecording() async {
+    await audioPlayer.stopRecorder();
+
+    setState(() {
+      isRecording = false;
+    });
+
+    // Show a dialog with a message that recording has completed
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Recording Completed'),
+          content: Text('Audio recording has been saved successfully.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+
+  void playAudio() async {
+    // Prompt the user for a password
+    TextEditingController passwordController = TextEditingController();
+    bool isAuthorized = false;
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Enter Password'),
+          content: TextField(
+            controller: passwordController,
+            obscureText: true,
+            decoration: InputDecoration(hintText: 'Password'),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(false);
+              },
+              child: Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (passwordController.text == _password) {
+                  isAuthorized = true;
+                  Navigator.of(context).pop(true);
+                } else {
+                  Navigator.of(context).pop(false);
+                }
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (isAuthorized) {
+      FlutterSoundPlayer flutterSoundPlayer = FlutterSoundPlayer();
+      await flutterSoundPlayer.startPlayer(fromURI:audioFilePath);
+    } else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Unauthorized'),
+            content: Text('You are not authorized to play this recording.'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
+  }
+  
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('IWSA App'),
+    ),
+    body: 
+    Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          ElevatedButton(
+            onPressed: () {
+              if (!isRecording) {
+                startRecording();
+              } else {
+                stopRecording();
+              }
+            },
+            child: Text(isRecording ? 'Stop Recording' : 'Start Recording'),
+          ),
+          const SizedBox(height: 16.0),
+          ElevatedButton(
+            onPressed: () {
+              playAudio();
+            },
+            child: const Text('Play Audio'),
+          ),
+          const SizedBox(height: 16.0),
+          ElevatedButton(
+            onPressed: _sendPanicSMS,
+
+          child: Text('Panic Button'),
+          ),
+        ],
+      ),
+      
+    ),
+  );
+}
+}
+*/
+class _MyHomePageState extends State<MyHomePage> {
+
+//my editskv
+  late StreamSubscription<AccelerometerEvent> _streamSubscription;
+  final double _shakeThreshold = 17.0;
+  String _phoneNumber = '9543913949';
+  
+  /*FlutterSoundRecorder? _recorder;
+  bool _isRecording = false;
+  StreamSubscription? _recorderStatusSubscription;
+  StreamSubscription? _audioStreamSubscription;
+  String _filePath = '';
+  */
+
+  Future<void> _getPhoneNumber() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String? phoneNumber = prefs.getString('phoneNumber');
+    if (phoneNumber != null) {
+      setState(() {
+        _phoneNumber = phoneNumber;
+      });
+    }
+  }
+
+  Future<void> _updatePhoneNumber(String newNumber) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('phoneNumber', newNumber);
+    setState(() {
+      _phoneNumber = newNumber;
+    });
+  }
+
+
+
+  @override
+  void initState() {
+    super.initState();
+    _getPhoneNumber();
+    _streamSubscription = accelerometerEvents.listen((AccelerometerEvent event) {
+      if (event != null) {
+        double x = event.x;
+        double y = event.y;
+        double z = event.z;
+
+        double acceleration = _calculateAcceleration(x, y, z);
+
+        if (acceleration > _shakeThreshold) {
+          _makePhoneCall();
+        }
+      }
+    });
+  }
+double _calculateAcceleration(double x, double y, double z) {
     double acceleration = sqrt(x * x + y * y + z * z);
     return acceleration;
   }
@@ -165,10 +338,1075 @@ class _MyAppState extends State<MyApp> {
     }
   }
 
+
+Future<void> _sendPanicSMS() async {
+  final locationData = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+  final latitude = locationData.latitude;
+  final longitude = locationData.longitude;
+  final message = "Help! I'm in danger. My current location is: https://www.google.com/maps/search/?api=1&query=$latitude,$longitude";
+
+  final recipients = ['9362903540', '9894959181'];
+  try {
+    await sendSMS(message: message, recipients: recipients);
+  } catch (error) {
+    print(error.toString());
+  }
+}
+
+
+
+
   @override
   void dispose() {
     super.dispose();
     _streamSubscription.cancel();
+  }
+  late String newNumber;
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('IWSA App'),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children:<Widget> [
+            DrawerHeader(
+              child: Text('Women Safety Tips',style: TextStyle(fontSize: 24,color: Colors.white),),
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+            ),
+             ListTile(
+              title: Text('Enter New Phone Number'),
+              trailing: Icon(Icons.edit),
+              onTap: () async {
+                newNumber = await showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text('Enter New Phone Number'),
+                      content: TextField(
+                        keyboardType: TextInputType.phone,
+                        decoration: InputDecoration(hintText: 'Enter Phone Number'),
+                        onChanged: (value) {
+                          newNumber = value;
+                        },
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          child: Text('Cancel'),
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                        TextButton(
+                          child: Text('Save'),
+                          onPressed: () {
+                            _updatePhoneNumber(newNumber);
+                            Navigator.of(context).pop();
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+            ListTile(
+              title: Text('Sexual assault and harassment'),
+              onTap: () {
+              Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Item1Page()),
+              );
+              },
+            ),
+            ListTile(
+              title: Text('Robbery or chain snatching'),
+              onTap: () {
+              Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Item2Page()),
+              );
+              },
+            ),
+            ListTile(
+              title: Text('Eve-teasing'),
+              onTap: () {
+              Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Item3Page()),
+              );
+              },
+            ),
+            ListTile(
+              title: Text('Dowry deaths'),
+              onTap: () {
+              Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Item4Page()),
+              );
+              },
+            ),
+            ListTile(
+              title: Text('Honour killings'),
+              onTap: () {
+              Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Item5Page()),
+              );
+              },
+            ),
+            ListTile(
+              title: Text('Female infanticide and sex-selective abortion'),
+              onTap: () {
+              Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Item6Page()),
+              );
+              },
+            ),
+            ListTile(
+              title: Text('Domestic violence'),
+              onTap: () {
+              Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Item7Page()),
+              );
+              },
+            ),
+            ListTile(
+              title: Text('Forced child marriage'),
+              onTap: () {
+              Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Item8Page()),
+              );
+              },
+            ),
+            ListTile(
+              title: Text('Acid throwing'),
+              onTap: () {
+              Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Item9Page()),
+              );
+              },
+            ),
+            ListTile(
+              title: Text('Online bullying'),
+              onTap: () {
+              Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => Item10Page()),
+              );
+              },
+            ),
+          ],
+        ),
+      ),
+      body:Center(child:
+        ElevatedButton(
+  onPressed: () {
+    _sendPanicSMS();
+  },
+  child: Container(
+    width: 100.0, // Replace with the desired width
+    height: 100.0, // Replace with the desired height
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+    ),
+    child: Center(
+      child: Text(
+        'SOS',
+        style: TextStyle(
+          fontSize: 18.0,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+    ),
+  ),
+  style: ElevatedButton.styleFrom(
+    primary: Colors.red,
+    elevation: 4.0,
+    shape: CircleBorder(),
+    ),
+    ),
+  ),
+  );
+  }
+}
+
+
+
+class Item1Page extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Sexual assault and harassment'),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: RichText(
+            text: TextSpan(
+              children: <TextSpan>[
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Seek medical attention immediately.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Report the incident to the police as soon as possible.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Report the incident to the police as soon as possible.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+class Item2Page extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Robbery or chain snatching'),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: RichText(
+            text: TextSpan(
+              children: <TextSpan>[
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Report the incident to the police as soon as possible.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Preserve any evidence, such as CCTV footage or eyewitness accounts.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Cancel any credit or debit cards that were stolen, and change any passwords associated with them.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+class Item3Page extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Eve-teasing'),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: RichText(
+            text: TextSpan(
+              children: <TextSpan>[
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'If possible, confront the perpetrator and ask them to stop their behaviour.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Seek help from bystanders or authorities if necessary.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Report the incident to the police as soon as possible.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Preserve any evidence, such as CCTV footage or eyewitness accounts.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Seek emotional and psychological support from friends, family, or a therapist.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+class Item4Page extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Dowry deaths'),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: RichText(
+            text: TextSpan(
+              children: <TextSpan>[
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Seek medical attention immediately, if needed.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Report the incident to the police as soon as possible.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Preserve any evidence, such as letters, photographs, or witnesses to the dowry demand.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Seek legal aid from a lawyer, who can help you file a case under the Dowry Prohibition Act.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Seek emotional and psychological support from friends, family, or a therapist.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+class Item5Page extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Honour killings'),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: RichText(
+            text: TextSpan(
+              children: <TextSpan>[
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Seek immediate safety if you feel threatened.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Report the incident to the police as soon as possible.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Preserve any evidence, such as witnesses or threats made against you or your family.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Seek legal aid from a lawyer, who can help you file a case under the Protection of Women from Domestic Violence Act or the Indian Penal Code.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Seek emotional and psychological support from friends, family, or a therapist.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+class Item6Page extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Female infanticide and sex-selective abortion'),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: RichText(
+            text: TextSpan(
+              children: <TextSpan>[
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Report any incidents of female infanticide or sex-selective abortion to the police as soon as possible.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Support education and awareness campaigns that promote the value of girl children.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Advocate for legal and policy changes that enforce laws against gender discrimination and female infanticide/feticide.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Seek emotional and psychological support from friends, family, or a therapist.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+class Item7Page extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Domestic violence'),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: RichText(
+            text: TextSpan(
+              children: <TextSpan>[
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Seek medical attention immediately, if needed.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Report the incident to the police as soon as possible.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Seek legal aid from a lawyer, who can help you file a case under the Protection of Women from Domestic Violence Act or the Indian Penal Code.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Seek support from women\'s organizations or counseling services that can provide shelter and emotional support.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Seek emotional and psychological support from friends, family, or a therapist.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+class Item8Page extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Forced child marriage'),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: RichText(
+            text: TextSpan(
+              children: <TextSpan>[
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Seek legal aid from a lawyer, who can help you file a case under the Prohibition of Child Marriage Act or the Indian Penal Code.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Advocate for education and awareness campaigns that promote the value of education and discourage child marriage.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Seek support from women\'s organizations or counselling services that can provide shelter and emotional support.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+class Item9Page extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Acid throwing'),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: RichText(
+            text: TextSpan(
+              children: <TextSpan>[
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Seek medical attention immediately.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Report the incident to the police as soon as possible.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Preserve any evidence, such as CCTV footage or eyewitness accounts.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Seek legal aid from a lawyer, who can help you file a case under the Indian Penal Code or the Criminal Law Amendment Act.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+class Item10Page extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Online bullying'),
+      ),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: RichText(
+            text: TextSpan(
+              children: <TextSpan>[
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Document the abuse.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Report the abuse to the platform or law enforcement.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Protect your privacy.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Seek emotional support.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: '• ',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16.0,
+                  ),
+                ),
+                TextSpan(
+                  text: 'Educate yourself and others on online safety and security.\n',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 16.0,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    
+  }
+}
+
+
+/*import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  void _launchMaps() async {
+    String query = 'police station';
+    String encodedQuery = Uri.encodeComponent(query);
+    String url = 'https://www.google.com/maps/search/?api=1&query=$encodedQuery';
+
+    try {
+      if (await canLaunch(url)) {
+        await launch(url);
+      } else {
+        throw 'Could not launch $url';
+      }
+    } catch (error) {
+      print('Error launching Google Maps: $error');
+    }
   }
 
   @override
@@ -176,12 +1414,15 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       home: Scaffold(
         appBar: AppBar(
-          title: Text('Shake to Call'),
+          title: Text('Nearby Police Stations'),
         ),
         body: Center(
-          child: Text('Shake your phone to make a call.'),
+          child: ElevatedButton(
+            onPressed: _launchMaps,
+            child: Text('Find Police Stations'),
+          ),
         ),
       ),
     );
   }
-}
+}*/
