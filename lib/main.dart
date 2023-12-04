@@ -1,11 +1,7 @@
 
 import 'package:flutter/material.dart';
-import 'package:flutter_sound/flutter_sound.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-import 'dart:async';
+import 'dart:async' show Future, StreamSubscription;
 import 'dart:math';
 import 'package:sensors/sensors.dart';
 import 'package:geolocator/geolocator.dart';
@@ -1141,43 +1137,3 @@ class Item10Page extends StatelessWidget {
     
   }
 }
-
-/* find nearby police station work in chrome web
-import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
-
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  void _launchMaps() async {
-    String query = 'police station';
-    String encodedQuery = Uri.encodeComponent(query);
-    String url = 'https://www.google.com/maps/search/?api=1&query=$encodedQuery';
-
-    if (await canLaunch(url)) {
-      print('Launching URL: $url');
-      await launch(url);
-    } else {
-      print('Could not launch URL: $url');
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('Nearby Police Stations'),
-        ),
-        body: Center(
-          child: ElevatedButton(
-            onPressed: _launchMaps,
-            child: Text('Find Police Stations'),
-          ),
-        ),
-      ),
-    );
-  }
-}*/
